@@ -57,6 +57,28 @@ def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, S
 }
 
 
+def getGitlabWebHookJson() {
+  return 
+    '''{
+        "url": "http://nas:8081/project/jenkins.seeder",
+        "push_events": true,
+        "tag_push_events": false,
+        "merge_requests_events": false,
+        "repository_update_events": false,
+        "enable_ssl_verification": false,
+        "project_id": 1,
+        "issues_events": false,
+        "confidential_issues_events": false,
+        "note_events": false,
+        "confidential_note_events": false,
+        "pipeline_events": false,
+        "wiki_page_events": false,
+        "job_events": false,
+        "push_events_branch_filter": ""
+    }'''
+}
+
+
 def gitLabGetProjects(String gitLabUrl, String privateToken) {
     
    def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}");
@@ -113,8 +135,7 @@ node("master") {
            
             gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
                 println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
-                            
-
+            
                 if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {                    
                     println "Jenkinsfile found."
 
@@ -123,6 +144,15 @@ node("master") {
                     
                     if (result.equals(200)) {
                         
+                    }
+
+                    def hooks = gitLabHasWebHooks(it, "B7f8DnDsNpFeF95pXFF9")
+
+                    if (hooks == null) {  
+                    
+                    }
+                    else {
+                      println (hooks)
                     }
                 }
                 else {
