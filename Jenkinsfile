@@ -1,6 +1,5 @@
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
-
 def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, String credentialsId = "f38cce97-8302-4196-8e4b-677c26717dea" ) {
     
     return """<?xml version='1.1' encoding='UTF-8'?>
@@ -58,6 +57,13 @@ def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, S
 }
 
 
+def gitLabGetProjects(String gitLabUrl, String privateToken) {
+    
+   def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}");
+   return new groovy.json.JsonSlurper().parse(projects.newReader());
+}
+
+
 def gitLabHasJenkinsfile(Object gitLabProject, String privateToken, String branchName = "master") {
     
     def fileUrl = new URL("${gitLabProject._links.self}/repository/files/Jenkinsfile?ref=$branchName&private_token=$privateToken");
@@ -71,10 +77,11 @@ def gitLabHasJenkinsfile(Object gitLabProject, String privateToken, String branc
     }
 }
 
-def gitLabGetProjects(String gitLabUrl, String privateToken) {
+def gitLabHasWebHooks(Object gitLabProject, String privateToken) {
     
-   def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}");
-   return new groovy.json.JsonSlurper().parse(projects.newReader());
+   def hooks = new URL("${gitLabProject._links.self}/hooks?private_token=$privateToken");
+
+   return new groovy.json.JsonSlurper().parse(hooks.newReader());
 }
 
 
@@ -96,8 +103,7 @@ def createMultiBranchProject(String jenkinsUrl, String projectName, String proje
 node("master") {
 
     try 
-    {
-        
+    {        
         stage('init') {
             checkout scm
             updateGitlabCommitStatus(state: 'running');
@@ -107,9 +113,9 @@ node("master") {
            
             gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
                 println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
-            
-                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {
-                    
+                            
+
+                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {                    
                     println "Jenkinsfile found."
 
                     def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
