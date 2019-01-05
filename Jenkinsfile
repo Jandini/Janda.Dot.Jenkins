@@ -1,3 +1,5 @@
+properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
+
 
 def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, String credentialsId = "f38cce97-8302-4196-8e4b-677c26717dea" ) {
     
@@ -77,8 +79,10 @@ def createMultiBranchProject(String jenkinsUrl, String projectName, String proje
 }
 
 node("master") {
+
     
-   stage('projects') {
+
+    stage('projects') {
        
         getGitLabProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
             
@@ -90,5 +94,9 @@ node("master") {
                 
             }
         }
+    }
+    
+    gitlabCommitStatus() {
+        println "done"   
     }
 }
