@@ -58,7 +58,20 @@ def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, S
 }
 
 
-def getGitLabProjects(String gitLabUrl, String privateToken) {
+def gitLabHasJenkinsfile(Object gitLabProject, String privateToken, String branchName = "master") {
+    
+    def fileUrl = new URL("${gitLabProject._links.self}/repository/files/Jenkinsfile?ref=$branchName&private_token=$privateToken");
+    
+    try {
+        def jenkinsFile = new groovy.json.JsonSlurper().parse(fileUrl.newReader());
+        return true
+    }
+    catch (FileNotFoundException e) {
+        return false
+    }
+}
+
+def gitLabGetProjects(String gitLabUrl, String privateToken) {
     
    def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}");
    return new groovy.json.JsonSlurper().parse(projects.newReader());
@@ -78,8 +91,9 @@ def createMultiBranchProject(String jenkinsUrl, String projectName, String proje
     return post.getResponseCode();
 }
 
-node("master") {
 
+
+node("master") {
 
     try 
     {
@@ -91,14 +105,22 @@ node("master") {
         
         stage('seed') {
            
-            getGitLabProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
-                
+            gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
                 println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
-                def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
-                println("Result: ${result}");
-                
-                if (result.equals(200)) {
+            
+                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {
                     
+                    println "Jenkinsfile found."
+
+                    def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
+                    println("Result: ${result}");
+                    
+                    if (result.equals(200)) {
+                        
+                    }
+                }
+                else {
+                    println "Jenkinsfile not found."
                 }
             }
         }
