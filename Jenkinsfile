@@ -58,7 +58,25 @@ def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, S
 }
 
 
-def getGitLabProjects(String gitLabUrl, String privateToken) {
+def gitLabHasJenkinsfile(Object gitLabProject, String privateToken, String branchName = "master") {
+    
+    def fileUrl = new URL("${gitLabProject._links.self}/repository/files/Jenkinsfile?ref=$branchName&private_token=$privateToken");
+    
+    println "Looking up Jenkinsfile in ${gitLabProject._links.self}"
+    
+    try
+    {
+        def jenkinsFile = new groovy.json.JsonSlurper().parse(fileUrl.newReader());
+        println "Jenkinsfile found."
+        return true
+    }
+    catch (FileNotFoundException e) {
+        println "Jenkinsfile not found."
+        return false
+    }
+}
+
+def gitLabGetProjects(String gitLabUrl, String privateToken) {
     
    def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}");
    return new groovy.json.JsonSlurper().parse(projects.newReader());
@@ -78,8 +96,9 @@ def createMultiBranchProject(String jenkinsUrl, String projectName, String proje
     return post.getResponseCode();
 }
 
-node("master") {
 
+
+node("master") {
 
     try 
     {
@@ -91,14 +110,16 @@ node("master") {
         
         stage('seed') {
            
-            getGitLabProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
-                
-                println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
-                def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
-                println("Result: ${result}");
-                
-                if (result.equals(200)) {
+            gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
+                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {
                     
+                    println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
+                    def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
+                    println("Result: ${result}");
+                    
+                    if (result.equals(200)) {
+                        
+                    }
                 }
             }
         }
