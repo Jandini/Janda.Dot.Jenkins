@@ -1,3 +1,5 @@
+properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
+
 
 def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, String credentialsId = "f38cce97-8302-4196-8e4b-677c26717dea" ) {
     
@@ -77,18 +79,37 @@ def createMultiBranchProject(String jenkinsUrl, String projectName, String proje
 }
 
 node("master") {
-    
-   stage('projects') {
-       
-        getGitLabProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
-            
-            println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
-            def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
-            println("Result: ${result}");
-            
-            if (result.equals(200)) {
+
+
+    try 
+    {
+        
+        stage('init') {
+            checkout scm
+            updateGitlabCommitStatus(state: 'running');
+        }
+        
+        stage('seed') {
+           
+            getGitLabProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
                 
+                println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
+                def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
+                println("Result: ${result}");
+                
+                if (result.equals(200)) {
+                    
+                }
             }
         }
+        
+        updateGitlabCommitStatus(state: 'success');
+    }
+    catch (e) {
+        updateGitlabCommitStatus(state: 'failed');
+        throw e
+    }
+    finally {
+        deleteDir()
     }
 }
