@@ -124,13 +124,13 @@ def jenkinsCreateMultiBranchProject(String jenkinsUrl, String projectName, Strin
 
 def gitLabCreateWebHook(Object gitLabProject, String privateToken, String jenkinsUrl) {
     
-    def hooksUrl = new URL("${gitLabProject._links.self}/hooks?private_token=$privateToken");
+    def post = new URL("${gitLabProject._links.self}/hooks?private_token=$privateToken");
     def json = getGitlabWebHookJson(gitLabProject, jenkinsUrl)
     
     post.setRequestMethod("POST")
     post.setDoOutput(true)
     post.setRequestProperty("Content-Type", "application/json")
-    post.getOutputStream().write(xml.getBytes("UTF-8"));
+    post.getOutputStream().write(json.getBytes("UTF-8"));
     return post.getResponseCode();
 }
 
