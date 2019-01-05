@@ -59,21 +59,14 @@ def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, S
 
 def getGitlabWebHookJson(Object gitLabProject, String jenkinsUrl) {
   
-  
-  println gitLabProject.path
-  println jenkinsUrl
-
-  
-
-  return 
-    """{
+    return groovy.json.JsonOutput.toJson([
         "url": "${jenkinsUrl}/project/${gitLabProject.path}",
         "push_events": true,
         "tag_push_events": false,
         "merge_requests_events": false,
         "repository_update_events": false,
         "enable_ssl_verification": false,
-        "project_id": 1,
+        "project_id": "${gitLabProject.id}",
         "issues_events": false,
         "confidential_issues_events": false,
         "note_events": false,
@@ -81,8 +74,8 @@ def getGitlabWebHookJson(Object gitLabProject, String jenkinsUrl) {
         "pipeline_events": false,
         "wiki_page_events": false,
         "job_events": false,
-        "push_events_branch_filter": ""
-    }"""
+        "push_events_branch_filter": ""     
+     ])
 }
 
 
@@ -153,17 +146,21 @@ node("master") {
                         
                     }
 
-
                     def hooks = gitLabHasWebHooks(it, "B7f8DnDsNpFeF95pXFF9")
 
                     if (hooks == null) {  
                     
                     }
                     else {
+                        println "Existing hooks:"
                         println (hooks)
                     }
 
-                    getGitlabWebHookJson(it, "http://nas.home:8081")
+                    println "New hooks:"
+
+                    def json = getGitlabWebHookJson(it, "http://nas.home:8081")
+                    
+                    println json
                 }
                 else {
                     println "Jenkinsfile not found."
