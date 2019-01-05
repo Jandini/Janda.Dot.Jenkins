@@ -161,23 +161,21 @@ node("master") {
 
                     def hooks = gitLabGetWebHooks(it, "B7f8DnDsNpFeF95pXFF9")
                     
-                    println hooks
+                    if (hooks.size() == 0) {  
+                        println "No GitLab project webhook found."
+                        def json = getGitlabWebHookJson(it, "http://nas.home:8081")                    
+                        println "Creating new GitLab hook"
+                        println json
 
-                    if (hooks == null) {  
-                    
-                    
+                        gitLabCreateWebHook(it, "B7f8DnDsNpFeF95pXFF9", "http://nas.home:8081") 
+
                     }
                     else {
                         println "Existing hooks:"
                         println (hooks)
                     }
-
-                    println "New hooks:"
-
-                    def json = getGitlabWebHookJson(it, "http://nas.home:8081")
-                    
-                    println json
-                }
+ 
+                }  
                 else {
                     println "Jenkinsfile not found."
                 }
