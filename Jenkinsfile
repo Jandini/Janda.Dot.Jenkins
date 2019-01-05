@@ -62,7 +62,7 @@ def getGitlabWebHookJson(Object gitLabProject, String jenkinsUrl) {
     return groovy.json.JsonOutput.toJson([
         "url": "${jenkinsUrl}/project/${gitLabProject.path}",
         "push_events": true,
-        "tag_push_events": false,
+        "tag_push_events": true,
         "merge_requests_events": false,
         "repository_update_events": false,
         "enable_ssl_verification": false,
@@ -99,15 +99,16 @@ def gitLabHasJenkinsfile(Object gitLabProject, String privateToken, String branc
     }
 }
 
-def gitLabHasWebHooks(Object gitLabProject, String privateToken) {
+def gitLabGetWebHooks(Object gitLabProject, String privateToken) {
     
-   def hooks = new URL("${gitLabProject._links.self}/hooks?private_token=$privateToken");
+    def hooksUrl = new URL("${gitLabProject._links.self}/hooks?private_token=$privateToken");
+    def hooks = new groovy.json.JsonSlurper().parse(hooksUrl.newReader());
 
-   return new groovy.json.JsonSlurper().parse(hooks.newReader());
+    return hooks
 }
 
 
-def createMultiBranchProject(String jenkinsUrl, String projectName, String projectPath, String projectGitUrl) {
+def jenkinsCreateMultiBranchProject(String jenkinsUrl, String projectName, String projectPath, String projectGitUrl) {
     
     def post = new URL("${jenkinsUrl}/createItem?name=${projectPath}").openConnection()
     def xml = getWorkflowMultiBranchProjectXml(projectName, projectGitUrl)
@@ -120,6 +121,18 @@ def createMultiBranchProject(String jenkinsUrl, String projectName, String proje
     return post.getResponseCode();
 }
 
+
+def gitLabCreateWebHook(Object gitLabProject, String privateToken, String jenkinsUrl) {
+    
+    def hooksUrl = new URL("${gitLabProject._links.self}/hooks?private_token=$privateToken");
+    def json = getGitlabWebHookJson(gitLabProject, jenkinsUrl)
+    
+    post.setRequestMethod("POST")
+    post.setDoOutput(true)
+    post.setRequestProperty("Content-Type", "application/json")
+    post.getOutputStream().write(xml.getBytes("UTF-8"));
+    return post.getResponseCode();
+}
 
 
 node("master") {
@@ -139,16 +152,19 @@ node("master") {
                 if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {                    
                     println "Jenkinsfile found."
 
-                    def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
+                    def result = jenkinsCreateMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
                     println("Result: ${result}");
                     
                     if (result.equals(200)) {
                         
                     }
 
-                    def hooks = gitLabHasWebHooks(it, "B7f8DnDsNpFeF95pXFF9")
+                    def hooks = gitLabGetWebHooks(it, "B7f8DnDsNpFeF95pXFF9")
+                    
+                    println hooks
 
                     if (hooks == null) {  
+                    
                     
                     }
                     else {
