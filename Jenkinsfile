@@ -62,16 +62,11 @@ def gitLabHasJenkinsfile(Object gitLabProject, String privateToken, String branc
     
     def fileUrl = new URL("${gitLabProject._links.self}/repository/files/Jenkinsfile?ref=$branchName&private_token=$privateToken");
     
-    println "Looking up Jenkinsfile in ${gitLabProject._links.self}"
-    
-    try
-    {
+    try {
         def jenkinsFile = new groovy.json.JsonSlurper().parse(fileUrl.newReader());
-        println "Jenkinsfile found."
         return true
     }
     catch (FileNotFoundException e) {
-        println "Jenkinsfile not found."
         return false
     }
 }
@@ -111,15 +106,21 @@ node("master") {
         stage('seed') {
            
             gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
+                println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
+            
                 if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {
                     
-                    println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
+                    println "Jenkinsfile found."
+
                     def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
                     println("Result: ${result}");
                     
                     if (result.equals(200)) {
                         
                     }
+                }
+                else {
+                    println "Jenkinsfile not found."
                 }
             }
         }
