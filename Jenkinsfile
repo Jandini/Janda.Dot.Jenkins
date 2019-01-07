@@ -57,10 +57,17 @@ def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, S
 }
 
 
-def getGitlabWebHookJson() {
+def getGitlabWebHookJson(Object gitLabProject, String jenkinsUrl) {
+  
+  
+  println gitLabProject.path
+  println jenkinsUrl
+
+  
+
   return 
-    '''{
-        "url": "http://nas:8081/project/jenkins.seeder",
+    """{
+        "url": "${jenkinsUrl}/project/${gitLabProject.path}",
         "push_events": true,
         "tag_push_events": false,
         "merge_requests_events": false,
@@ -75,7 +82,7 @@ def getGitlabWebHookJson() {
         "wiki_page_events": false,
         "job_events": false,
         "push_events_branch_filter": ""
-    }'''
+    }"""
 }
 
 
@@ -146,14 +153,17 @@ node("master") {
                         
                     }
 
+
                     def hooks = gitLabHasWebHooks(it, "B7f8DnDsNpFeF95pXFF9")
 
                     if (hooks == null) {  
                     
                     }
                     else {
-                      println (hooks)
+                        println (hooks)
                     }
+
+                    getGitlabWebHookJson(it, "http://nas.home:8081")
                 }
                 else {
                     println "Jenkinsfile not found."
