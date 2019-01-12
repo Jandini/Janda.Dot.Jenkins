@@ -1,6 +1,5 @@
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
-
 def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, String credentialsId = "f38cce97-8302-4196-8e4b-677c26717dea" ) {
     
     return """<?xml version='1.1' encoding='UTF-8'?>
@@ -58,6 +57,35 @@ def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, S
 }
 
 
+def getGitlabWebHookJson(Object gitLabProject, String jenkinsUrl) {
+  
+    return groovy.json.JsonOutput.toJson([
+        "url": "${jenkinsUrl}/project/${gitLabProject.path}",
+        "push_events": true,
+        "tag_push_events": true,
+        "merge_requests_events": false,
+        "repository_update_events": false,
+        "enable_ssl_verification": false,
+        "project_id": "${gitLabProject.id}",
+        "issues_events": false,
+        "confidential_issues_events": false,
+        "note_events": false,
+        "confidential_note_events": false,
+        "pipeline_events": false,
+        "wiki_page_events": false,
+        "job_events": false,
+        "push_events_branch_filter": ""     
+     ])
+}
+
+
+def gitLabGetProjects(String gitLabUrl, String privateToken) {
+    
+   def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}");
+   return new groovy.json.JsonSlurper().parse(projects.newReader());
+}
+
+
 def gitLabHasJenkinsfile(Object gitLabProject, String privateToken, String branchName = "master") {
     
     def fileUrl = new URL("${gitLabProject._links.self}/repository/files/Jenkinsfile?ref=$branchName&private_token=$privateToken");
@@ -71,14 +99,16 @@ def gitLabHasJenkinsfile(Object gitLabProject, String privateToken, String branc
     }
 }
 
-def gitLabGetProjects(String gitLabUrl, String privateToken) {
+def gitLabGetWebHooks(Object gitLabProject, String privateToken) {
     
-   def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}");
-   return new groovy.json.JsonSlurper().parse(projects.newReader());
+    def hooksUrl = new URL("${gitLabProject._links.self}/hooks?private_token=$privateToken");
+    def hooks = new groovy.json.JsonSlurper().parse(hooksUrl.newReader());
+
+    return hooks
 }
 
 
-def createMultiBranchProject(String jenkinsUrl, String projectName, String projectPath, String projectGitUrl) {
+def jenkinsCreateMultiBranchProject(String jenkinsUrl, String projectName, String projectPath, String projectGitUrl) {
     
     def post = new URL("${jenkinsUrl}/createItem?name=${projectPath}").openConnection()
     def xml = getWorkflowMultiBranchProjectXml(projectName, projectGitUrl)
@@ -92,12 +122,23 @@ def createMultiBranchProject(String jenkinsUrl, String projectName, String proje
 }
 
 
+def gitLabCreateWebHook(Object gitLabProject, String privateToken, String jenkinsUrl) {
+    
+    def post = new URL("${gitLabProject._links.self}/hooks?private_token=$privateToken").openConnection()
+    def json = getGitlabWebHookJson(gitLabProject, jenkinsUrl)
+    
+    post.setRequestMethod("POST")
+    post.setDoOutput(true)
+    post.setRequestProperty("Content-Type", "application/json")
+    post.getOutputStream().write(json.getBytes("UTF-8"));
+    return post.getResponseCode();
+}
+
 
 node("master") {
 
     try 
-    {
-        
+    {        
         stage('init') {
             checkout scm
             updateGitlabCommitStatus(state: 'running');
@@ -108,17 +149,33 @@ node("master") {
             gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
                 println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
             
-                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {
-                    
+                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {                    
                     println "Jenkinsfile found."
 
-                    def result = createMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
+                    def result = jenkinsCreateMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
                     println("Result: ${result}");
                     
                     if (result.equals(200)) {
                         
                     }
-                }
+
+                    def hooks = gitLabGetWebHooks(it, "B7f8DnDsNpFeF95pXFF9")
+                    
+                    if (hooks.size() == 0) {  
+                        println "No GitLab project webhook found."
+                        def json = getGitlabWebHookJson(it, "http://nas.home:8081")                    
+                        println "Creating new GitLab hook"
+                        println json
+
+                        gitLabCreateWebHook(it, "B7f8DnDsNpFeF95pXFF9", "http://nas.home:8081") 
+
+                    }
+                    else {
+                        println "Existing hooks:"
+                        println (hooks)
+                    }
+ 
+                }  
                 else {
                     println "Jenkinsfile not found."
                 }
