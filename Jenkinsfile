@@ -149,7 +149,8 @@ node("master") {
             gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
                 println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
             
-                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9")) {                    
+                // check if Jenkinsfile exist in master or develop branch
+                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9") || gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9", "develop")) {                    
                     println "Jenkinsfile found."
 
                     def result = jenkinsCreateMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
