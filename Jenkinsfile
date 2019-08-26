@@ -146,14 +146,14 @@ node("master") {
         
         stage('seed') {
            
-            gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
+            gitLabGetProjects("http://nas", "B7f8DnDsNpFeF95pXFF9").each {
                 println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
             
                 // check if Jenkinsfile exist in master or develop branch
                 if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9") || gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9", "develop")) {                    
                     println "Jenkinsfile found."
 
-                    def result = jenkinsCreateMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
+                    def result = jenkinsCreateMultiBranchProject("http://nas:8081", it.name, it.path, it.http_url_to_repo)
                     println("Result: ${result}");
                     
                     if (result.equals(200)) {
@@ -164,11 +164,11 @@ node("master") {
                     
                     if (hooks.size() == 0) {  
                         println "No GitLab project webhook found."
-                        def json = getGitlabWebHookJson(it, "http://nas.home:8081")                    
+                        def json = getGitlabWebHookJson(it, "http://nas:8081")                    
                         println "Creating new GitLab hook"
                         println json
 
-                        gitLabCreateWebHook(it, "B7f8DnDsNpFeF95pXFF9", "http://nas.home:8081") 
+                        gitLabCreateWebHook(it, "B7f8DnDsNpFeF95pXFF9", "http://nas:8081") 
 
                     }
                     else {
