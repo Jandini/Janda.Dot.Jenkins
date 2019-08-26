@@ -1,5 +1,9 @@
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
+JENKINS_URL="http://nas:8081"
+GITLAB_URL="http://nas"
+GITLAB_TOKEN="B7f8DnDsNpFeF95pXFF9"
+
 def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, String credentialsId = "f38cce97-8302-4196-8e4b-677c26717dea" ) {
     
     return """<?xml version='1.1' encoding='UTF-8'?>
@@ -139,36 +143,36 @@ node("master") {
 
     try 
     {        
-        stage('init') {
+        stage('Init') {
             checkout scm
             updateGitlabCommitStatus(state: 'running');
         }
         
-        stage('seed') {
+        stage('Seed') {
            
-            gitLabGetProjects("http://nas.home", "B7f8DnDsNpFeF95pXFF9").each {
+            gitLabGetProjects(GITLAB_URL, GITLAB_TOKEN).each {
                 println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
             
                 // check if Jenkinsfile exist in master or develop branch
-                if (gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9") || gitLabHasJenkinsfile(it, "B7f8DnDsNpFeF95pXFF9", "develop")) {                    
+                if (gitLabHasJenkinsfile(it, GITLAB_TOKEN) || gitLabHasJenkinsfile(it, GITLAB_TOKEN, "develop")) {                    
                     println "Jenkinsfile found."
 
-                    def result = jenkinsCreateMultiBranchProject("http://nas.home:8081", it.name, it.path, it.http_url_to_repo)
+                    def result = jenkinsCreateMultiBranchProject(JENKINS_URL, it.name, it.path, it.http_url_to_repo)
                     println("Result: ${result}");
                     
                     if (result.equals(200)) {
                         
                     }
 
-                    def hooks = gitLabGetWebHooks(it, "B7f8DnDsNpFeF95pXFF9")
+                    def hooks = gitLabGetWebHooks(it, GITLAB_TOKEN)
                     
                     if (hooks.size() == 0) {  
                         println "No GitLab project webhook found."
-                        def json = getGitlabWebHookJson(it, "http://nas.home:8081")                    
+                        def json = getGitlabWebHookJson(it, JENKINS_URL)                    
                         println "Creating new GitLab hook"
                         println json
 
-                        gitLabCreateWebHook(it, "B7f8DnDsNpFeF95pXFF9", "http://nas.home:8081") 
+                        gitLabCreateWebHook(it, GITLAB_TOKEN, JENKINS_URL) 
 
                     }
                     else {
