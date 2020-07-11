@@ -85,7 +85,7 @@ def getGitlabWebHookJson(Object gitLabProject, String jenkinsUrl) {
 
 def gitLabGetProjects(String gitLabUrl, String privateToken) {
     
-   def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}");
+   def projects = new URL("${gitLabUrl}/api/v4/projects?private_token=${privateToken}&per_page=200");
    return new groovy.json.JsonSlurper().parse(projects.newReader());
 }
 
