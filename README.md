@@ -1,12 +1,12 @@
 <<<<<<< HEAD
 ### Janda.Dots.GitLab.Jenkins
 =======
-### Janda.Dot.GitLabJenkins
+### Janda.Dot.Jenkins
 >>>>>>> release/1.2.0
 
 | master | develop |
 |:------:|:-----------:|
-|[![Build Status](http://nas:8081/buildStatus/icon?job=Janda.Dot.GitLabJenkins/master)](http://nas:8081/job/Janda.Dot.GitLabJenkins/job/master)|[![Build Status](http://nas:8081/buildStatus/icon?job=Janda.Dot.GitLabJenkins/develop)](http://nas:8081/job/Janda.Dot.GitLabJenkins/job/develop)|
+|[![Build Status](http://nas:8081/buildStatus/icon?job=Janda.Dot.Jenkins/master)](http://nas:8081/job/Janda.Dot.Jenkins/job/master)|[![Build Status](http://nas:8081/buildStatus/icon?job=Janda.Dot.Jenkins/develop)](http://nas:8081/job/Janda.Dot.Jenkins/job/develop)|
 
 
 
