@@ -1,7 +1,7 @@
 package janda.dot
 import groovy.json.JsonSlurperClassic
 
-def Object gitVersion;
+Object gitVersion;
 
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
