@@ -1,7 +1,7 @@
 package janda.dot
 import groovy.json.JsonSlurperClassic
 
-
+def Object gitVersion;
 
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
@@ -10,6 +10,7 @@ def updateStatus(String status) {
 }
 
 def dot(String command) {
+    milestone()
     bat """
         call .${command}
         exit /b %ERRORLEVEL%
@@ -43,8 +44,19 @@ def Object checkoutBranch() {
         userRemoteConfigs: scm.userRemoteConfigs,
         ])
 
-    Global.gitVersion = getGitVersion();
+    Common.gitVersion = getGitVersion();
     currentBuild.description = gitVersion.InformationalVersion
     return gitVersion;
 }
 
+
+def void buildInit() {
+    milestone Integer.parseInt(env.BUILD_ID)
+    deleteDir()  
+}
+
+
+def void buildCleanup() {
+    milestone()
+    deleteDir()  
+}
