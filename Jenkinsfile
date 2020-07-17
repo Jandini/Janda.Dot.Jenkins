@@ -144,7 +144,13 @@ node("master") {
     try 
     {        
         stage('Init') {
-            checkout scm
+            checkout([
+                $class: 'GitSCM',
+                branches: scm.branches,
+                extensions: [[$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: '']],
+                userRemoteConfigs: scm.userRemoteConfigs,
+            ])
+              
             updateGitlabCommitStatus(state: 'running');
         }
         
