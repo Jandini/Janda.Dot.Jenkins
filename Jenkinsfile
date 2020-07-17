@@ -11,7 +11,7 @@ node("master") {
         }
         
         stage('Seed') {
-            Seeder.run();            
+            Seeder.seed();            
         }
         
         Common.success();

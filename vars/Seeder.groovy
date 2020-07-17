@@ -144,7 +144,7 @@ def gitLabCreateWebHook(Object gitLabProject, String privateToken, String jenkin
 
 
 
-def run() {
+def seed() {
 
   gitLabGetProjects(GitLab.GITLAB_URL, GitLab.GITLAB_TOKEN).each {
         println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
