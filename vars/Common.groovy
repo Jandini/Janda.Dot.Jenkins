@@ -66,3 +66,17 @@ def void cleanup() {
 def void done() {
     getPackageLinks(Global.gitVersion)
 }
+
+
+def void running() {
+    Common.updateStatus('running')
+}
+
+def void success() {
+    Common.updateStatus('success')
+}
+
+def void failed(Exception e) {
+    Common.updateStatus('failed')
+    throw e
+}
