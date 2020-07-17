@@ -1,4 +1,4 @@
-package janda.dot
+package janda.dot.jenkins
 import groovy.json.JsonSlurperClassic
 
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])

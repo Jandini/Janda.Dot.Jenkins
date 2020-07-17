@@ -1,3 +1,5 @@
+package janda.dot.jenkins
+
 def call() {
 
     node("matt10") {

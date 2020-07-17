@@ -1,4 +1,4 @@
-package janda.dot
+package janda.dot.jenkins
 
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
