@@ -1,7 +1,9 @@
 package janda.dot
 import groovy.json.JsonSlurperClassic
 
-Object gitVersion;
+class Global {
+   static Object gitVersion;
+}
 
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
@@ -44,7 +46,7 @@ def Object checkoutBranch() {
         userRemoteConfigs: scm.userRemoteConfigs,
         ])
 
-    Common.gitVersion = getGitVersion();
+    Global.gitVersion = getGitVersion();
     currentBuild.description = gitVersion.InformationalVersion
     return gitVersion;
 }
