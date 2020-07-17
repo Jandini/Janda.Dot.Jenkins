@@ -69,14 +69,14 @@ def void done() {
 
 
 def void running() {
-    Common.updateStatus('running')
+    updateStatus('running')
 }
 
 def void success() {
-    Common.updateStatus('success')
+    updateStatus('success')
 }
 
 def void failed(Exception e) {
-    Common.updateStatus('failed')
+    updateStatus('failed')
     throw e
 }
