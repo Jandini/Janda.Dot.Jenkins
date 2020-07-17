@@ -3,7 +3,9 @@ import groovy.json.JsonSlurperClassic
 
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
-static Object gitVersion;
+class Global {
+  static Object gitVersion;
+}
 
 def updateStatus(String status) {
     updateGitlabCommitStatus(state: status);
@@ -44,8 +46,8 @@ def Object checkout() {
         userRemoteConfigs: scm.userRemoteConfigs,
         ])
 
-    Common.gitVersion = getGitVersion();
-    currentBuild.description = Common.gitVersion.InformationalVersion
+    Global.gitVersion = getGitVersion();
+    currentBuild.description = Global.gitVersion.InformationalVersion
     return gitVersion;
 }
 
@@ -62,7 +64,7 @@ def void cleanup() {
 }
 
 def void done() {
-    getPackageLinks(Common.gitVersion)
+    getPackageLinks(Global.gitVersion)
 }
 
 

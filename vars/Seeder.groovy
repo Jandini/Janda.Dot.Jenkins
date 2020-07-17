@@ -2,9 +2,11 @@ package janda.dot.jenkins
 
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
-static String JENKINS_URL="http://nas:8081"
-static String GITLAB_URL="http://nas"
-static String GITLAB_TOKEN="B7f8DnDsNpFeF95pXFF9"
+class GitLab {
+  static String JENKINS_URL="http://nas:8081"
+  static String GITLAB_URL="http://nas"
+  static String GITLAB_TOKEN="B7f8DnDsNpFeF95pXFF9"
+}
 
 def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, String credentialsId = "f38cce97-8302-4196-8e4b-677c26717dea" ) {
     
@@ -138,4 +140,45 @@ def gitLabCreateWebHook(Object gitLabProject, String privateToken, String jenkin
     post.setRequestProperty("Content-Type", "application/json")
     post.getOutputStream().write(json.getBytes("UTF-8"));
     return post.getResponseCode();
+}
+
+
+
+def run() {
+
+  gitLabGetProjects(GitLab.GITLAB_URL, GitLab.GITLAB_TOKEN).each {
+        println("Project: ${it.name}; Path: ${it.path}; Url: ${it.http_url_to_repo}")
+    
+        // check if Jenkinsfile exist in master or develop branch
+        if (gitLabHasJenkinsfile(it, GitLab.GITLAB_TOKEN) || gitLabHasJenkinsfile(it, GitLab.GITLAB_TOKEN, "develop")) {                    
+            println "Jenkinsfile found."
+
+            def result = jenkinsCreateMultiBranchProject(GitLab.JENKINS_URL, it.name, it.path, it.http_url_to_repo)
+            println("Result: ${result}");
+            
+            if (result.equals(200)) {
+                
+            }
+
+            def hooks = gitLabGetWebHooks(it, GitLab.GITLAB_TOKEN)
+            
+            if (hooks.size() == 0) {  
+                println "No GitLab project webhook found."
+                def json = getGitlabWebHookJson(it, GitLab.JENKINS_URL)                    
+                println "Creating new GitLab hook"
+                println json
+
+                gitLabCreateWebHook(it, GitLab.GITLAB_TOKEN, GitLab.JENKINS_URL) 
+
+            }
+            else {
+                println "Existing hooks:"
+                println (hooks)
+            }
+
+        }  
+        else {
+            println "Jenkinsfile not found."
+        }
+    }
 }
