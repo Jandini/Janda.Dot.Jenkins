@@ -2,9 +2,9 @@ package janda.dot
 
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
-JENKINS_URL="http://nas:8081"
-GITLAB_URL="http://nas"
-GITLAB_TOKEN="B7f8DnDsNpFeF95pXFF9"
+static String JENKINS_URL="http://nas:8081"
+static String GITLAB_URL="http://nas"
+static String GITLAB_TOKEN="B7f8DnDsNpFeF95pXFF9"
 
 def getWorkflowMultiBranchProjectXml(String displayName, String httpUrlToRepo, String credentialsId = "f38cce97-8302-4196-8e4b-677c26717dea" ) {
     

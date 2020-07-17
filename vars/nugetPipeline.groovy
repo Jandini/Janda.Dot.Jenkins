@@ -1,6 +1,6 @@
-def call(String nodeName = "matt10") {
+def call() {
 
-    node(nodeName) {
+    node("matt10") {
         
         try {
             
