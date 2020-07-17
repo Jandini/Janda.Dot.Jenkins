@@ -37,7 +37,7 @@ def void getPackageLinks(Object gitVersion) {
 	println "Branch:    ${branch}\nVersion:   ${version}\n          "
 }
 
-def Object checkoutBranch() {
+def Object checkout() {
 
     checkout([
         $class: 'GitSCM',
@@ -52,13 +52,17 @@ def Object checkoutBranch() {
 }
 
 
-def void buildInit() {
+def void init() {
     milestone Integer.parseInt(env.BUILD_ID)
     deleteDir()  
 }
 
 
-def void buildCleanup() {
+def void cleanup() {
     milestone()
     deleteDir()  
+}
+
+def void done() {
+    getPackageLinks(Global.gitVersion)
 }
