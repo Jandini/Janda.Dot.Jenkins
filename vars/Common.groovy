@@ -1,82 +1,85 @@
 package janda.dot
 import groovy.json.JsonSlurperClassic
 
-class Global {
-   static Object gitVersion;
-}
-
 properties([[$class: 'GitLabConnectionProperty', gitLabConnection: 'NAS']])
 
-def updateStatus(String status) {
-    updateGitlabCommitStatus(state: status);
-}
 
-def dot(String command) {
-    milestone()
-    bat """
-        call .${command}
-        exit /b %ERRORLEVEL%
-    """
-}
+class Common {
 
-def Object getGitVersion() {
-	jsonText = bat(returnStdout: true, script: '@gitversion')
-	println "${jsonText}"
-	return new JsonSlurperClassic().parseText(jsonText)
-}
+  static Object gitVersion;
 
-def String getPackageFtpLinkText(String link, String text) {
-	def projectName = env.JOB_NAME.substring(0, env.JOB_NAME.indexOf("/")).toLowerCase() 
-	def ftpUri = "ftp://nas/builds/${projectName}/" + link
-	return hudson.console.ModelHyperlinkNote.encodeTo(ftpUri, text);
-}
+  def updateStatus(String status) {
+      updateGitlabCommitStatus(state: status);
+  }
 
-def void getPackageLinks(Object gitVersion) {
-	branch = getPackageFtpLinkText("${gitVersion.BranchName}", gitVersion.BranchName)
-	version = getPackageFtpLinkText("${gitVersion.BranchName}/${gitVersion.InformationalVersion}", gitVersion.InformationalVersion)	
-	println "Branch:    ${branch}\nVersion:   ${version}\n          "
-}
+  def dot(String command) {
+      milestone()
+      bat """
+          call .${command}
+          exit /b %ERRORLEVEL%
+      """
+  }
 
-def Object checkout() {
+  def Object getGitVersion() {
+    jsonText = bat(returnStdout: true, script: '@gitversion')
+    println "${jsonText}"
+    return new JsonSlurperClassic().parseText(jsonText)
+  }
 
-    checkout([
-        $class: 'GitSCM',
-        branches: scm.branches,
-        extensions: [[$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: '']],
-        userRemoteConfigs: scm.userRemoteConfigs,
-        ])
+  def String getPackageFtpLinkText(String link, String text) {
+    def projectName = env.JOB_NAME.substring(0, env.JOB_NAME.indexOf("/")).toLowerCase() 
+    def ftpUri = "ftp://nas/builds/${projectName}/" + link
+    return hudson.console.ModelHyperlinkNote.encodeTo(ftpUri, text);
+  }
 
-    Global.gitVersion = getGitVersion();
-    currentBuild.description = gitVersion.InformationalVersion
-    return gitVersion;
-}
+  def void getPackageLinks(Object gitVersion) {
+    branch = getPackageFtpLinkText("${gitVersion.BranchName}", gitVersion.BranchName)
+    version = getPackageFtpLinkText("${gitVersion.BranchName}/${gitVersion.InformationalVersion}", gitVersion.InformationalVersion)	
+    println "Branch:    ${branch}\nVersion:   ${version}\n          "
+  }
 
+  def Object checkout() {
 
-def void init() {
-    milestone Integer.parseInt(env.BUILD_ID)
-    deleteDir()  
-}
+      checkout([
+          $class: 'GitSCM',
+          branches: scm.branches,
+          extensions: [[$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: '']],
+          userRemoteConfigs: scm.userRemoteConfigs,
+          ])
 
-
-def void cleanup() {
-    milestone()
-    deleteDir()  
-}
-
-def void done() {
-    getPackageLinks(Global.gitVersion)
-}
+      Common.gitVersion = getGitVersion();
+      currentBuild.description = Common.gitVersion.InformationalVersion
+      return gitVersion;
+  }
 
 
-def void running() {
-    updateStatus('running')
-}
+  def void init() {
+      milestone Integer.parseInt(env.BUILD_ID)
+      deleteDir()  
+  }
 
-def void success() {
-    updateStatus('success')
-}
 
-def void failed(Exception e) {
-    updateStatus('failed')
-    throw e
+  def void cleanup() {
+      milestone()
+      deleteDir()  
+  }
+
+  def void done() {
+      getPackageLinks(Common.gitVersion)
+  }
+
+
+  def void running() {
+      updateStatus('running')
+  }
+
+  def void success() {
+      updateStatus('success')
+  }
+
+  def void failed(Exception e) {
+      updateStatus('failed')
+      throw e
+  }
+
 }
